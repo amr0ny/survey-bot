@@ -1,7 +1,6 @@
 import telebot as telebot
 import yaml
 from bot import Bot
-from sheets import CSVTable
 
 
 
@@ -10,7 +9,6 @@ yml_path = './data/data.yml'
 with open(yml_path, 'r') as file:
     data = yaml.safe_load(file)
 bot = Bot(TOKEN, data)
-
 
 @bot.message_handler(commands=['start'])
 def start_handler(message):

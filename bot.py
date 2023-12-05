@@ -12,8 +12,10 @@ class Bot(TeleBot):
 		super().__init__(self.token)
 		self.data = [data.get(i) for i in data]
 		self.__msg_id = 0
-		self.user_ans = []
-		self.csv_table = CSVTable(self.file_path, [self.data[key]['msg'] for key in data])
+		self.user_ans =  {data[index]['msg']: '' for index, value in enumerate(self.data)}
+		print(self.user_ans)
+		self.csv_table = CSVTable(self.file_path)
+		
 	def set_msg_id(self, msg_id):
 		self.__msg_id = msg_id
 
@@ -43,13 +45,13 @@ class Bot(TeleBot):
 		ans_type = self.data[self.__msg_id-1]['ans_type']
 		is_last = False
 		if 'is_last' in self.data[self.__msg_id]:
-			is_last = True if self.data[self.__msg_id ]['is_last'] == 'Yes' else False
+			is_last = True if self.data[self.__msg_id]['is_last'] == 'Yes' else False
 		print(message.text, ans_type)
 		msg = message
 		match ans_type:
 			case 'txt':
-				self.user_ans.append({self.data[self.__msg_id-1]['msg'], message.text})
-
+				self.user_ans[self.data[self.__msg_id-1]['msg']] = message.text
+				print(self.user_ans)
 				if 'next_msg_id' in self.data[self.__msg_id-1]:
 					tmp_msg_id = self.__msg_id
 					self.set_msg_id(self.data[tmp_msg_id-1]['next_msg_id'])
@@ -62,7 +64,7 @@ class Bot(TeleBot):
 			case 'btn':
 				buttons = self.data[self.__msg_id-1]['buttons']
 				if message.text in buttons:
-					self.user_ans.append({self.data[self.__msg_id-1]['msg'], message.text})
+					self.user_ans[self.data[self.__msg_id-1]['msg']] = message.text
 
 					tmp_msg_id = self.__msg_id
 					self.set_msg_id(self.data[tmp_msg_id-1]['buttons'][message.text]['msg_id'])
@@ -79,7 +81,8 @@ class Bot(TeleBot):
 					with open(path_to_photo, 'wb') as file:
 						file.write(response.content)
 					
-					self.user_ans.append({self.data[self.__msg_id-1]['msg'], path_to_photo})
+					
+					self.user_ans[self.data[self.__msg_id-1]['msg']] = path_to_photo
 
 					if 'next_msg_id' in self.data[self.__msg_id-1]:
 						tmp_msg_id = self.__msg_id
