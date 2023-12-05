@@ -92,7 +92,7 @@ class Bot(TeleBot):
 		if message.text in buttons:
 			user_ans[user_data[msg_id-1]['msg']] = message.text
 			self.set_msg_id(user_id, user_data[msg_id-1]['buttons'][message.text]['msg_id'])
-			msg = a
+			msg = self.send_msg(message)
 			self.set_msg_id(user_id, user_data[msg_id-1]['buttons'][message.text]['msg_id']+1)
 		else:
 			user_ans[user_data[msg_id-1]['msg']] = message.text
