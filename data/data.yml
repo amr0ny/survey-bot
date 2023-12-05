@@ -11,9 +11,10 @@
       msg_id: 4
     'Назад':
       msg_id: 0
+  next_msg_id: 4
 2:
   msg: Любишь шамана???
-  ans_type: btn
+  ans_type: txtbtn
   buttons:
     'Ой, трусы упали' :
       msg_id: 5
@@ -21,6 +22,7 @@
       msg_id: 4
     'Назад':
       msg_id: 1
+  next_msg_id: 5
 3:
   msg: Разлогинься, чурка!
   ans_type: btn

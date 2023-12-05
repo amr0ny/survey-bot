@@ -1,21 +1,23 @@
 from telebot import types, TeleBot
-
 from sheets import CSVTable
 import requests
 import uuid
 
 class Bot(TeleBot):
 
-	file_path = './usr_data/usr_responses.csv'
+	user_data_path = './usr_data/usr_responses.csv'
+	photo_directory = './photos'
 	def __init__(self, token, data, config=None):
+		if config != None:
+			self.user_data_path = config['user_data_path']
+			self.photo_directory = config['photo_directory']
 		self.token = token
 		super().__init__(self.token)
 		self.data_template = [data.get(i) for i in data]
-
 		self.data = {}
 		self.users_ans =  {}
 		self.__user_msg_id = {}
-		self.csv_table = CSVTable(self.file_path, [i['msg'] for i in self.data_template])
+		self.csv_table = CSVTable(self.user_data_path, [i['msg'] for i in self.data_template])
 		
 	def init_user(self, user_id):
 		self.data[user_id] = self.data_template
@@ -52,7 +54,6 @@ class Bot(TeleBot):
 		msg_id = self.__user_msg_id[user_id]
 		user_data = self.data[user_id]
 		user_ans = self.users_ans[user_id]
-	
 
 		user_ans[user_data[msg_id-1]['msg']] = message.text
 		if 'next_msg_id' in user_data[msg_id-1]:
@@ -116,7 +117,7 @@ class Bot(TeleBot):
 			photo_id = message.photo[-1].file_id
 			print(super().get_file_url(photo_id))
 			response = requests.get(super().get_file_url(photo_id))
-			path_to_photo = f'./photos/f{str(uuid.uuid4())}-{message.from_user.username}.jpg'
+			path_to_photo = f'{self.photo_directory}/f{str(uuid.uuid4())}-{message.from_user.username}.jpg'
 			with open(path_to_photo, 'wb') as file:
 				file.write(response.content)
 			user_ans[user_data[msg_id-1]['msg']] = path_to_photo

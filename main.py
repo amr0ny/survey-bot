@@ -1,14 +1,18 @@
 import telebot as telebot
+import json
 import yaml
 from bot import Bot
 
+with open('config.json', 'r') as file:
+    config = json.load(file)
 
+token = config['token']
+yml_path = config['scenario_yaml_path']
 
-TOKEN = "6775496962:AAHR2QrrJ0frrplKxerdEB9Eh07MIOYPT1I"
-yml_path = './data/data.yml'
 with open(yml_path, 'r') as file:
     data = yaml.safe_load(file)
-bot = Bot(TOKEN, data)
+    
+bot = Bot(token, data, config=config)
 
 @bot.message_handler(commands=['start'])
 def start_handler(message):
