@@ -43,6 +43,12 @@
   msg: Наконец-то достойный славянин!🇷🇺
   ans_type: btn
   buttons:
-    'Start over':
-      msg_id: 0
+    'Finish':
+      msg_id: 7
   is_last: 'Yes'
+7:
+  msg: Начать заново?
+  ans_type: btn
+  buttons:
+    'Да':
+      msg_id: 0

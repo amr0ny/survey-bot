@@ -12,7 +12,7 @@ bot = Bot(TOKEN, data)
 
 @bot.message_handler(commands=['start'])
 def start_handler(message):
-	bot.reg_user(message)
+	bot.init_user(message.from_user.id)
 	msg = bot.send_msg(message)
 	bot.set_msg_id(message.from_user.id, 1)
 	return bot.register_next_step_handler(msg, bot.handle_message)
