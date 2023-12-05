@@ -12,9 +12,9 @@ bot = Bot(TOKEN, data)
 
 @bot.message_handler(commands=['start'])
 def start_handler(message):
+	bot.reg_user(message)
 	msg = bot.send_msg(message)
-	print(f'{bot.data[bot.get_msg_id()]["msg"]} - {message.text}, msg_id: {bot.get_msg_id()}')
-	bot.set_msg_id(1)
+	bot.set_msg_id(message.from_user.id, 1)
 	return bot.register_next_step_handler(msg, bot.handle_message)
 
 bot.enable_save_next_step_handlers()
