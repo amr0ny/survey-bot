@@ -5,7 +5,7 @@ from bot import Bot
 
 with open('config.json', 'r') as file:
     config = json.load(file)
-
+    
 token = config['token']
 yml_path = config['scenario_yaml_path']
 

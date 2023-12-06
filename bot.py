@@ -37,8 +37,8 @@ class Bot(TeleBot):
 
 		ans_type = user_scenario_data[msg_id]['ans_type']
 		msg_text = user_scenario_data[msg_id]['msg']
-		markup = None
-		if ans_type == 'btn':
+		markup = types.ReplyKeyboardRemove(selective=False)
+		if ans_type == 'btn' or ans_type == 'txtbtn':
 			markup = types.ReplyKeyboardMarkup(row_width=4, one_time_keyboard=True, resize_keyboard=True, selective=False)	
 			[markup.add(btn) for btn in user_scenario_data[msg_id]['buttons']]
 		return msg_text, markup
@@ -55,6 +55,8 @@ class Bot(TeleBot):
 		user_scenario_data = self.scenario_data[user_id]
 		user_ans = self.users_ans[user_id]
 
+		if message.content_type != 'text':
+			return super().send_message(message.chat.id, 'You need to send a text message.')
 		user_ans[user_scenario_data[msg_id-1]['msg']] = message.text
 		if 'next_msg_id' in user_scenario_data[msg_id-1]:
 			self.set_msg_id(user_id, user_scenario_data[msg_id-1]['next_msg_id'])
