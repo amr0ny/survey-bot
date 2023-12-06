@@ -30,17 +30,23 @@ class Bot(TeleBot):
 	def get_msg_id(self, user_id):
 		return self.__user_msg_id[user_id]
 
+	#Introduce exceptions handler for different cases: the absence of 'ans_type' or 'msg' field, 'user_id' in 'self.scenario_data' or self.__user_msg_id
 	def build_msg(self, message):
-		user_id = message.from_user.id
-		msg_id = self.__user_msg_id[user_id]
-		user_scenario_data = self.scenario_data[user_id]
-		ans_type = user_scenario_data[msg_id]['ans_type']
-		msg_text = user_scenario_data[msg_id]['msg']
 		markup = types.ReplyKeyboardRemove(selective=False)
-		if ans_type == 'btn' or ans_type == 'txtbtn':
-			markup = types.ReplyKeyboardMarkup(row_width=4, one_time_keyboard=True, resize_keyboard=True, selective=False)	
-			[markup.add(btn) for btn in user_scenario_data[msg_id]['buttons']]
-		return msg_text, markup
+		try:
+			user_id = message.from_user.id
+			msg_id = self.__user_msg_id[user_id]
+			user_scenario_data = self.scenario_data[user_id]
+			ans_type = user_scenario_data[msg_id]['ans_type']
+			msg_text = user_scenario_data[msg_id]['msg']
+			if ans_type == 'btn' or ans_type == 'txtbtn':
+				markup = types.ReplyKeyboardMarkup(row_width=4, one_time_keyboard=True, resize_keyboard=True, selective=False)	
+				[markup.add(btn) for btn in user_scenario_data[msg_id]['buttons']]
+			return msg_text, markup
+		except KeyError as err:
+			return f"{type(err)}: {err} field doesn't exist", markup
+
+
 
 	def send_msg(self, message):
 		msg_text, markup = self.build_msg(message)
@@ -155,3 +161,11 @@ class Bot(TeleBot):
 				msg = self.handle_txtbtn_message(message)
 		self.csv_table.append_user(user_ans) and print('success') if is_last else None
 		return super().register_next_step_handler(msg, self.handle_message)
+	
+
+	@staticmethod
+	def build_msg_err(err):
+		match type(err):
+			case KeyError:
+				msg = f"{type(err)}: {err} doesn't exist"
+		return msg

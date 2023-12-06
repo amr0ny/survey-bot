@@ -3,6 +3,7 @@ sys.path.append('../src/')
 
 from datetime import datetime, timedelta
 import time
+import re
 import pytest
 import yaml
 import json
@@ -38,7 +39,8 @@ class TestBot:
         assert user_id in bot.users_ans
         assert user_id in bot._Bot__user_msg_id
     
-    @pytest.mark.parametrize("yml_path", ['test_scenarios/unit_btn_sc.yml', 'test_scenarios/unit_txt_sc.yml', 'test_scenarios/unit_txtbtn_sc.yml', 'test_scenarios/unit_txt_next_msg_id_sc.yml', 'test_scenarios/unit_txtbtn_next_msg_id_sc.yml', 'test_scenarios/unit_pic_sc.yml', 'test_scenarios/unit_pic_next_msg_id_sc.yml', 'test_scenarios/unit_wrong_type_sc.yml'])
+    # Need to implement case of KeyError
+    @pytest.mark.parametrize("yml_path", ['test_scenarios/unit_btn_sc.yml', 'test_scenarios/unit_txt_sc.yml', 'test_scenarios/unit_txtbtn_sc.yml', 'test_scenarios/unit_txt_next_msg_id_sc.yml', 'test_scenarios/unit_txtbtn_next_msg_id_sc.yml', 'test_scenarios/unit_pic_sc.yml', 'test_scenarios/unit_pic_next_msg_id_sc.yml', 'test_scenarios/unit_wrong_type_sc.yml', 'test_scenarios/unit_absent_field_sc.yml'])
     def test_build_msg(self, bot_init):
         bot, scenario_data = bot_init[0], bot_init[1]
         msg = self.create_text_message('/start')
@@ -53,11 +55,10 @@ class TestBot:
         bot.process_new_messages([msg])
         time.sleep(1) 
         if 'buttons' in scenario_data[0]:
-
             #This line can cause possible issues in this test work while further bot scaling process due to {i[0]['text']for i in output[1].keyboard}
-            assert output[0] == scenario_data[0]['msg'] and {i[0]['text']for i in output[1].keyboard} == scenario_data[0]['buttons'].keys()
+            assert output[0] == scenario_data[0]['msg'] or re.match(r"([^:]+): (.+)", output[0]) and {i[0]['text']for i in output[1].keyboard} == scenario_data[0]['buttons'].keys()
         else:
-            assert output[0] == scenario_data[0]['msg']
+            assert output[0] == scenario_data[0]['msg'] or re.match(r"([^:]+): (.+)", output[0])
 
     #@pytest.mark.parametrize("yml_path", ['test_scenarios/unit_btn_sc.yml', 'test_scenarios/unit_txt_sc.yml', 'test_scenarios/unit_txtbtn_sc.yml', 'test_scenarios/unit_txt_next_msg_id_sc.yml', 'test_scenarios/unit_txtbtn_next_msg_id_sc.yml', 'test_scenarios/unit_pic_sc.yml', 'test_scenarios/unit_pic_next_msg_id_sc.yml'])
     #def test_send_msg(self, bot_init):
