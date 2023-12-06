@@ -34,7 +34,6 @@ class Bot(TeleBot):
 		user_id = message.from_user.id
 		msg_id = self.__user_msg_id[user_id]
 		user_scenario_data = self.scenario_data[user_id]
-
 		ans_type = user_scenario_data[msg_id]['ans_type']
 		msg_text = user_scenario_data[msg_id]['msg']
 		markup = types.ReplyKeyboardRemove(selective=False)
