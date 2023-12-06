@@ -3,7 +3,7 @@ import json
 import yaml
 from bot import Bot
 
-with open('config.json', 'r') as file:
+with open('../config.json', 'r') as file:
     config = json.load(file)
     
 token = config['token']
