@@ -160,7 +160,7 @@ class Bot(TeleBot):
 				msg = self.handle_pic_message(message)
 			case 'txtbtn':
 				msg = self.handle_txtbtn_message(message)
-		self.csv_table.append_user(self.users_ans[user_id]) and print('success') if is_last else None
+		self.csv_table.append_user(self.users_ans[user_id]) if is_last else None
 		return super().register_next_step_handler(msg, self.handle_message)
 	
 
