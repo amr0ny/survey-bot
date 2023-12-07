@@ -55,35 +55,37 @@ class Bot(TeleBot):
 	def handle_txt_message(self, message):
 		msg = message
 		user_id = message.from_user.id
-		msg_id = self.__user_msg_id[user_id]
-		user_scenario_data = self.scenario_data[user_id]
-		user_ans = self.users_ans[user_id]
+		try:
+			msg_id = self.__user_msg_id[user_id]
+			current_msg = self.scenario_data[user_id][msg_id-1]
 
-		if message.content_type != 'text':
-			return super().send_message(message.chat.id, 'You need to send a text message.')
-		user_ans[user_scenario_data[msg_id-1]['msg']] = message.text
-		if 'next_msg_id' in user_scenario_data[msg_id-1]:
-			self.set_msg_id(user_id, user_scenario_data[msg_id-1]['next_msg_id'])
-			msg = self.send_msg(message)
-			self.set_msg_id(user_id, user_scenario_data[msg_id-1]['next_msg_id']+1)
-		else:
-			msg = self.send_msg(message)
-			self.set_msg_id(user_id, msg_id+1)
+			if message.content_type != 'text':
+				msg = super().send_message(message.chat.id, 'You need to send a text message.')
+				return msg
+			self.users_ans[user_id][current_msg['msg']] = message.text
+			if 'next_msg_id' in current_msg:
+				self.set_msg_id(user_id, current_msg['next_msg_id'])
+				msg = self.send_msg(message)
+				self.set_msg_id(user_id, current_msg['next_msg_id']+1)
+			else:
+				msg = self.send_msg(message)
+				self.set_msg_id(user_id, msg_id+1)
+		except KeyError as err:
+			msg = super().send_message(message.chat.id, f"{type(err)}: {err} field doesn't exist")
 		return msg
 
 	def handle_btn_message(self, message):
 		msg = message
 		user_id = message.from_user.id
 		msg_id = self.__user_msg_id[user_id]
-		user_scenario_data = self.scenario_data[user_id]
-		user_ans = self.users_ans[user_id]
+		current_msg = self.scenario_data[user_id][msg_id-1]
+		buttons = current_msg['buttons']
 
-		buttons = user_scenario_data[msg_id-1]['buttons']
 		if message.text in buttons:
-			user_ans[user_scenario_data[msg_id-1]['msg']] = message.text
-			self.set_msg_id(user_id, user_scenario_data[msg_id-1]['buttons'][message.text]['msg_id'])
+			self.users_ans[user_id][current_msg['msg']] = message.text
+			self.set_msg_id(user_id, buttons[message.text]['msg_id'])
 			msg = self.send_msg(message)
-			self.set_msg_id(user_id, user_scenario_data[msg_id-1]['buttons'][message.text]['msg_id']+1)
+			self.set_msg_id(user_id, buttons[message.text]['msg_id']+1)
 		else:
 			msg = super().send_message(message.chat.id, 'You need to choose a button.')
 		return msg
@@ -92,21 +94,22 @@ class Bot(TeleBot):
 		msg = message
 		user_id = message.from_user.id
 		msg_id = self.__user_msg_id[user_id]
-		user_scenario_data = self.scenario_data[user_id]
-		user_ans = self.users_ans[user_id]
+		current_msg = self.scenario_data[user_id][msg_id-1]
+		buttons = current_msg['buttons']
 
-		buttons = user_scenario_data[msg_id-1]['buttons']
+		if message.content_type != 'text':
+			msg = super().send_message(message.chat.id, 'You need to send a text message.')
+			return msg
+		self.users_ans[user_id][current_msg['msg']] = message.text
 		if message.text in buttons:
-			user_ans[user_scenario_data[msg_id-1]['msg']] = message.text
-			self.set_msg_id(user_id, user_scenario_data[msg_id-1]['buttons'][message.text]['msg_id'])
+			self.set_msg_id(user_id, buttons[message.text]['msg_id'])
 			msg = self.send_msg(message)
-			self.set_msg_id(user_id, user_scenario_data[msg_id-1]['buttons'][message.text]['msg_id']+1)
+			self.set_msg_id(user_id, buttons[message.text]['msg_id']+1)
 		else:
-			user_ans[user_scenario_data[msg_id-1]['msg']] = message.text
-			if 'next_msg_id' in user_scenario_data[msg_id-1]:
-				self.set_msg_id(user_id, user_scenario_data[msg_id-1]['next_msg_id'])
+			if 'next_msg_id' in current_msg:
+				self.set_msg_id(user_id, current_msg['next_msg_id'])
 				msg = self.send_msg(message)
-				self.set_msg_id(user_id, user_scenario_data[msg_id-1]['next_msg_id']+1)
+				self.set_msg_id(user_id, current_msg['next_msg_id']+1)
 			else:
 				msg = self.send_msg(message)
 				self.set_msg_id(user_id, msg_id+1)
@@ -116,8 +119,7 @@ class Bot(TeleBot):
 		msg = message
 		user_id = message.from_user.id
 		msg_id = self.__user_msg_id[user_id]
-		user_scenario_data = self.scenario_data[user_id]
-		user_ans = self.users_ans[user_id]
+		current_msg = self.scenario_data[user_id][msg_id-1]
 
 		if message.content_type == 'photo':
 			photo_id = message.photo[-1].file_id
@@ -126,11 +128,11 @@ class Bot(TeleBot):
 			path_to_photo = f'{self.photo_directory}/f{str(uuid.uuid4())}-{message.from_user.username}.jpg'
 			with open(path_to_photo, 'wb') as file:
 				file.write(response.content)
-			user_ans[user_scenario_data[msg_id-1]['msg']] = path_to_photo
-			if 'next_msg_id' in user_scenario_data[msg_id-1]:
-				self.set_msg_id(user_id, user_scenario_data[msg_id-1]['next_msg_id'])
+			self.users_ans[user_id][current_msg['msg']] = path_to_photo
+			if 'next_msg_id' in current_msg:
+				self.set_msg_id(user_id, current_msg['next_msg_id'])
 				msg = self.send_msg(message)
-				self.set_msg_id(user_id, user_scenario_data[msg_id-1]['next_msg_id']+1)
+				self.set_msg_id(user_id, current_msg['next_msg_id']+1)
 			else:
 				msg = self.send_msg(message)
 				self.set_msg_id(user_id, msg_id+1)
@@ -143,12 +145,12 @@ class Bot(TeleBot):
 		msg = message
 		user_id = message.from_user.id
 		msg_id = self.__user_msg_id[user_id]
-		user_scenario_data = self.scenario_data[user_id]
-		user_ans = self.users_ans[user_id]
-		ans_type = user_scenario_data[msg_id-1]['ans_type']
-		print(f'{user_scenario_data[msg_id-1]["msg"]} - {message.text}, msg_id: {self.get_msg_id(user_id)}')
+		current_msg = self.scenario_data[user_id][msg_id-1]
+
+		ans_type = current_msg['ans_type']
+		print(f'{current_msg["msg"]} - {message.text}, msg_id: {self.get_msg_id(user_id)}')
 		
-		is_last = 'is_last' in user_scenario_data[msg_id-1] and user_scenario_data[msg_id-1]['is_last'] == 'Yes'
+		is_last = 'is_last' in current_msg and current_msg['is_last'] == 'Yes'
 		match ans_type:
 			case 'txt':
 				msg = self.handle_txt_message(message)
@@ -158,7 +160,7 @@ class Bot(TeleBot):
 				msg = self.handle_pic_message(message)
 			case 'txtbtn':
 				msg = self.handle_txtbtn_message(message)
-		self.csv_table.append_user(user_ans) and print('success') if is_last else None
+		self.csv_table.append_user(self.users_ans[user_id]) and print('success') if is_last else None
 		return super().register_next_step_handler(msg, self.handle_message)
 	
 

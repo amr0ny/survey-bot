@@ -63,10 +63,8 @@ class TestBot:
         else:
             assert output[0] == scenario_data[0]['msg'] or re.match(r"([^:]+): (.+)", output[0])
 
-    #@pytest.mark.parametrize("yml_path", ['test_scenarios/unit_btn_sc.yml', 'test_scenarios/unit_txt_sc.yml', 'test_scenarios/unit_txtbtn_sc.yml', 'test_scenarios/unit_txt_next_msg_id_sc.yml', 'test_scenarios/unit_txtbtn_next_msg_id_sc.yml', 'test_scenarios/unit_pic_sc.yml', 'test_scenarios/unit_pic_next_msg_id_sc.yml'])
-    #def test_send_msg(self, bot_init):
-    #    bot, scenario_data = bot_init[0], bot_init[1]
-    #    pass
+    #@pytest.mark.parametrize("yml_path", ['test_scenarios/unit_btn_sc.yml', 'test_scenarios/unit_txt_sc.yml', 'test_scenarios/unit_txtbtn_sc.yml', 'test_scenarios/unit_txt_next_msg_id_sc.yml', 'test_scenarios/unit_txtbtn_next_msg_id_sc.yml', 'test_scenarios/unit_pic_sc.yml', 'test_scenarios/unit_pic_next_msg_id_sc.yml', 'test_scenarios/unit_wrong_type_sc.yml', 'test_scenarios/unit_absent_field_sc.yml'])
+    #def test_handle_txt_message(self, bot_init):
 
 
     @staticmethod
