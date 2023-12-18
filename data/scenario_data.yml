@@ -6,8 +6,8 @@
 
 1:
   msg: Вопрос один
-  photo: "1.jpeg"
-  photo_only: true
+  photo: 1.jpeg
+  photo_only: false
   ans_type: btn
   buttons:
     'Первый ответ' :

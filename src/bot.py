@@ -10,15 +10,13 @@ class Bot(TeleBot):
 		self.bot_photo_directory = config['bot_photo_directory']
 		self.token = token
 		super().__init__(self.token)
-		self.scenario_data_template = [data.get(i) for i in data]
-		self.scenario_data = {}
+		self.scenario_data = [data.get(i) for i in data]
 		self.users_ans =  {}
 		self.__user_msg_id = {}
-		self.csv_table = CSVTable(self.user_data_path, [i['msg'] for i in self.scenario_data_template])
+		self.csv_table = CSVTable(self.user_data_path, [i['msg'] for i in self.scenario_data])
 		
 	def init_user(self, user_id):
-		self.scenario_data[user_id] = self.scenario_data_template
-		self.users_ans[user_id] = {self.scenario_data_template[index]['msg']: '' for index, _ in enumerate(self.scenario_data_template)}
+		self.users_ans[user_id] = {self.scenario_data[index]['msg']: '' for index, _ in enumerate(self.scenario_data)}
 		self.__user_msg_id[user_id] = 0
 
 	def set_msg_id(self, user_id, msg_id):
@@ -32,12 +30,11 @@ class Bot(TeleBot):
 		try:
 			user_id = message.from_user.id
 			msg_id = self.__user_msg_id[user_id]
-			user_scenario_data = self.scenario_data[user_id]
-			ans_type = user_scenario_data[msg_id]['ans_type']
-			msg_text = user_scenario_data[msg_id]['msg']
+			ans_type = self.scenario_data[msg_id]['ans_type']
+			msg_text = self.scenario_data[msg_id]['msg']
 			if (ans_type == 'btn' or ans_type == 'txtbtn'):
 				markup = types.ReplyKeyboardMarkup(row_width=4, one_time_keyboard=True, resize_keyboard=True, selective=False)	
-				[markup.add(btn) for btn in user_scenario_data[msg_id]['buttons']]
+				[markup.add(btn) for btn in self.scenario_data[msg_id]['buttons']]
 			return msg_text, markup
 		except KeyError as err:
 			return f"{type(err)}: {err} field doesn't exist", markup
@@ -47,17 +44,16 @@ class Bot(TeleBot):
 	def send_msg(self, message):
 		user_id = message.from_user.id
 		msg_id = self.__user_msg_id[user_id]
-		user_scenario_data = self.scenario_data[user_id]
 		msg_text, markup = self.build_msg(message)
 		try:
-			if 'photo' in user_scenario_data[msg_id]:
-				photo = open(self.bot_photo_directory+user_scenario_data[msg_id]['photo'], 'rb')
-				msg_text = None if 'photo_only' in user_scenario_data[msg_id] and user_scenario_data[msg_id]['photo_only'] else msg_text
+			if 'photo' in self.scenario_data[msg_id]:
+				photo = open(self.bot_photo_directory+self.scenario_data[msg_id]['photo'], 'rb')
+				msg_text = None if 'photo_only' in self.scenario_data[msg_id] and self.scenario_data[msg_id]['photo_only'] else msg_text
 				msg = super().send_photo(message.chat.id, photo, caption=msg_text, reply_markup=markup)
 			else:
 				msg = super().send_message(message.chat.id, msg_text, reply_markup=markup)
 		except OSError as err:
-			return super().send_message(message.chat.id, f"{type(err)}: {err} file doesn't exist in the folder {self.bot_photo_directory}")
+			return super().send_message(message.chat.id, f"{type(err)}: {err}")
 		return msg
 	
 	def handle_txt_message(self, message):
@@ -65,7 +61,7 @@ class Bot(TeleBot):
 		user_id = message.from_user.id
 		try:
 			msg_id = self.__user_msg_id[user_id]
-			current_msg = self.scenario_data[user_id][msg_id-1]
+			current_msg = self.scenario_data[msg_id-1]
 
 			if message.content_type != 'text':
 				msg = super().send_message(message.chat.id, 'You need to send a text message.')
@@ -79,14 +75,14 @@ class Bot(TeleBot):
 				msg = self.send_msg(message)
 				self.set_msg_id(user_id, msg_id+1)
 		except KeyError as err:
-			msg = super().send_message(message.chat.id, f"{type(err)}: {err} field doesn't exist")
+			msg = super().send_message(message.chat.id, f"{type(err)}: {err}")
 		return msg
 
 	def handle_btn_message(self, message):
 		msg = message
 		user_id = message.from_user.id
 		msg_id = self.__user_msg_id[user_id]
-		current_msg = self.scenario_data[user_id][msg_id-1]
+		current_msg = self.scenario_data[msg_id-1]
 		buttons = current_msg['buttons']
 
 		if message.text in buttons:
@@ -102,7 +98,7 @@ class Bot(TeleBot):
 		msg = message
 		user_id = message.from_user.id
 		msg_id = self.__user_msg_id[user_id]
-		current_msg = self.scenario_data[user_id][msg_id-1]
+		current_msg = self.scenario_data[msg_id-1]
 		buttons = current_msg['buttons']
 
 		if message.content_type != 'text':
@@ -127,33 +123,34 @@ class Bot(TeleBot):
 		msg = message
 		user_id = message.from_user.id
 		msg_id = self.__user_msg_id[user_id]
-		current_msg = self.scenario_data[user_id][msg_id-1]
-
-		if message.content_type == 'photo':
-			photo_id = message.photo[-1].file_id
-			print(super().get_file_url(photo_id))
-			response = requests.get(super().get_file_url(photo_id))
-			path_to_photo = f'{self.users_photo_directory}/f{str(uuid.uuid4())}-{message.from_user.username}.jpg'
-			with open(path_to_photo, 'wb') as file:
-				file.write(response.content)
-			self.users_ans[user_id][current_msg['msg']] = path_to_photo
-			if 'next_msg_id' in current_msg:
-				self.set_msg_id(user_id, current_msg['next_msg_id'])
-				msg = self.send_msg(message)
-				self.set_msg_id(user_id, current_msg['next_msg_id']+1)
+		current_msg = self.scenario_data[msg_id-1]
+		try:
+			if message.content_type == 'photo':
+				photo_id = message.photo[-1].file_id
+				print(super().get_file_url(photo_id))
+				response = requests.get(super().get_file_url(photo_id))
+				path_to_photo = f'{self.users_photo_directory}{message.from_user.username}–{str(uuid.uuid4())}.jpg'
+				with open(path_to_photo, 'wb') as file:
+					file.write(response.content)
+				self.users_ans[user_id][current_msg['msg']] = path_to_photo
+				if 'next_msg_id' in current_msg:
+					self.set_msg_id(user_id, current_msg['next_msg_id'])
+					msg = self.send_msg(message)
+					self.set_msg_id(user_id, current_msg['next_msg_id']+1)
+				else:
+					msg = self.send_msg(message)
+					self.set_msg_id(user_id, msg_id+1)
 			else:
-				msg = self.send_msg(message)
-				self.set_msg_id(user_id, msg_id+1)
-		else:
-			msg = super().send_message(message.chat.id, 'You need to send a photo.')
-
+				msg = super().send_message(message.chat.id, 'You need to send a photo.')
+		except FileNotFoundError as err:
+			msg = super().send_message(message.chat.id, f"{type(err)}: {err}")
 		return msg
 
 	def handle_message(self, message):
 		msg = message
 		user_id = message.from_user.id
 		msg_id = self.__user_msg_id[user_id]
-		current_msg = self.scenario_data[user_id][msg_id-1]
+		current_msg = self.scenario_data[msg_id-1]
 
 		ans_type = current_msg['ans_type']
 		print(f'{current_msg["msg"]} - {message.text}, msg_id: {self.get_msg_id(user_id)}')
@@ -170,11 +167,3 @@ class Bot(TeleBot):
 				msg = self.handle_txtbtn_message(message)
 		self.csv_table.append_user(self.users_ans[user_id]) if is_last else None
 		return super().register_next_step_handler(msg, self.handle_message)
-	
-
-	@staticmethod
-	def build_msg_err(err):
-		match type(err):
-			case KeyError:
-				msg = f"{type(err)}: {err} doesn't exist"
-		return msg

@@ -1,7 +1,8 @@
 /.DS_Store
 /.handler-saves
+/.vscode
+/.pytest_cache
 /__pycache__
 /example.csv
-/photos
-/usr_data
-data/user_responses.csv
+/data/users_photo_directory
+/data/user_responses.csv
