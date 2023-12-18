@@ -1,8 +1,7 @@
-/.DS_Store
-/.handler-saves
-/.vscode
-/.pytest_cache
-/__pycache__
-/example.csv
-/data/users_photo_directory
-/data/user_responses.csv
+.DS_Store
+.handler-saves
+.vscode
+.pytest_cache
+__pycache__
+data/users_photo_directory
+data/user_responses.csv
