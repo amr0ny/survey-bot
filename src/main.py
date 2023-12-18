@@ -12,7 +12,7 @@ yml_path = config['scenario_yaml_path']
 with open(yml_path, 'r') as file:
     data = yaml.safe_load(file)
     
-bot = Bot(token, data, config=config)
+bot = Bot(token, data, config)
 
 @bot.message_handler(commands=['start'])
 def start_handler(message):

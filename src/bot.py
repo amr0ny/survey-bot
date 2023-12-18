@@ -4,13 +4,10 @@ import requests
 import uuid
 
 class Bot(TeleBot):
-
-	user_data_path = './usr_data/usr_responses.csv'
-	photo_directory = './photos'
-	def __init__(self, token, data, config=None):
-		if config != None:
-			self.user_data_path = config['user_data_path']
-			self.photo_directory = config['photo_directory']
+	def __init__(self, token, data, config):
+		self.user_data_path = config['user_data_path']
+		self.users_photo_directory = config['users_photo_directory']
+		self.bot_photo_directory = config['bot_photo_directory']
 		self.token = token
 		super().__init__(self.token)
 		self.scenario_data_template = [data.get(i) for i in data]
@@ -48,8 +45,19 @@ class Bot(TeleBot):
 
 
 	def send_msg(self, message):
+		user_id = message.from_user.id
+		msg_id = self.__user_msg_id[user_id]
+		user_scenario_data = self.scenario_data[user_id]
 		msg_text, markup = self.build_msg(message)
-		msg = super().send_message(message.chat.id, msg_text, reply_markup=markup)
+		try:
+			if 'photo' in user_scenario_data[msg_id]:
+				photo = open(self.bot_photo_directory+user_scenario_data[msg_id]['photo'], 'rb')
+				msg_text = None if 'photo_only' in user_scenario_data[msg_id] and user_scenario_data[msg_id]['photo_only'] else msg_text
+				msg = super().send_photo(message.chat.id, photo, caption=msg_text, reply_markup=markup)
+			else:
+				msg = super().send_message(message.chat.id, msg_text, reply_markup=markup)
+		except OSError as err:
+			return super().send_message(message.chat.id, f"{type(err)}: {err} file doesn't exist in the folder {self.bot_photo_directory}")
 		return msg
 	
 	def handle_txt_message(self, message):
@@ -125,7 +133,7 @@ class Bot(TeleBot):
 			photo_id = message.photo[-1].file_id
 			print(super().get_file_url(photo_id))
 			response = requests.get(super().get_file_url(photo_id))
-			path_to_photo = f'{self.photo_directory}/f{str(uuid.uuid4())}-{message.from_user.username}.jpg'
+			path_to_photo = f'{self.users_photo_directory}/f{str(uuid.uuid4())}-{message.from_user.username}.jpg'
 			with open(path_to_photo, 'wb') as file:
 				file.write(response.content)
 			self.users_ans[user_id][current_msg['msg']] = path_to_photo
@@ -150,7 +158,7 @@ class Bot(TeleBot):
 		ans_type = current_msg['ans_type']
 		print(f'{current_msg["msg"]} - {message.text}, msg_id: {self.get_msg_id(user_id)}')
 		
-		is_last = 'is_last' in current_msg and current_msg['is_last'] == 'Yes'
+		is_last = 'is_last' in current_msg and current_msg['is_last']
 		match ans_type:
 			case 'txt':
 				msg = self.handle_txt_message(message)

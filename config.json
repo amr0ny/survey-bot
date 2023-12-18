@@ -2,5 +2,6 @@
     "token": "6775496962:AAHR2QrrJ0frrplKxerdEB9Eh07MIOYPT1I",
     "scenario_yaml_path": "../data/scenario_data.yml",
     "user_data_path": "../data/user_responses.csv",
-    "photo_directory": "../data/photos"
+    "users_photo_directory": "../data/users_photo_directory/",
+    "bot_photo_directory": "../data/bot_photo_directory/"
 }  
